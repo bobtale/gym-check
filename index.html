@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net; manifest-src 'self'">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Fortschritt, Kennzahlen und Muskelgruppen aus dem Hevy-CSV-Export, komplett im Browser.">
+  <title>Gym Check</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"
+          integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
+          crossorigin="anonymous"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <h1>Gym Check</h1>
+    <nav aria-label="Abschnitte">
+      <a href="#import">Import</a>
+      <a href="#ueberblick" class="needs-data" hidden>Überblick</a>
+      <a href="#verlauf" class="needs-data" hidden>Verlauf</a>
+      <a href="#uebungen" class="needs-data" hidden>Übungen</a>
+      <a href="#muskelgruppen" class="needs-data" hidden>Muskelgruppen</a>
+      <a href="#muskelaufbau" class="needs-data" hidden>Muskelaufbau</a>
+      <a href="#fakten" class="needs-data" hidden>Fakten</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="import" class="card">
+      <h2>Import</h2>
+      <p class="hint">Deine Daten bleiben auf diesem Gerät.</p>
+      <div id="import-picker">
+        <input id="file-input" type="file" accept=".csv,text/csv,text/comma-separated-values,text/plain">
+        <label class="file-button" for="file-input">CSV auswählen</label>
+        <div id="drop-zone" class="drop-zone">oder die CSV-Datei hierher ziehen</div>
+        <p class="hint">Export in Hevy sinngemäß: Profil → Einstellungen → Daten exportieren → Workouts exportieren (CSV).</p>
+      </div>
+      <p id="start-error" class="error">Die App ist nicht gestartet. Per Doppelklick geöffnet (file://) blockiert der Browser die Skripte: bitte über die veröffentlichte https-Adresse oder einen lokalen Webserver öffnen.</p>
+      <p id="import-error" class="error" role="alert" hidden></p>
+      <p id="storage-warning" class="warning" role="status" hidden></p>
+      <div id="import-summary" hidden>
+        <dl class="summary">
+          <dt>Datei</dt><dd id="sum-file"></dd>
+          <dt>Importiert</dt><dd id="sum-imported"></dd>
+          <dt>Workouts</dt><dd id="sum-workouts"></dd>
+          <dt>Sätze</dt><dd id="sum-sets"></dd>
+          <dt>Übungen</dt><dd id="sum-exercises"></dd>
+          <dt>Zeitraum</dt><dd id="sum-range"></dd>
+        </dl>
+        <ul id="import-warnings" class="warnings"></ul>
+        <div class="button-row">
+          <button type="button" id="btn-other">Andere Datei</button>
+          <button type="button" id="btn-clear" class="danger">Daten löschen</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="ueberblick" class="needs-data" hidden>
+      <h2>Überblick</h2>
+      <div id="kpis" class="kpi-grid"></div>
+      <p id="overview-note" class="hint" hidden>Unterstützte Übungen zählen ohne Körpergewicht mit 0 kg Volumen. Körpergewicht unter „Muskelaufbau“ eintragen.</p>
+    </section>
+
+    <section id="verlauf" class="needs-data" hidden>
+      <h2>Verlauf</h2>
+      <div class="card">
+        <div class="card-head">
+          <h3>Workouts</h3>
+          <div class="toggle" role="group" aria-label="Zeitraum">
+            <button type="button" data-period="week" aria-pressed="true">Woche</button>
+            <button type="button" data-period="month" aria-pressed="false">Monat</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chart-workouts"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Volumen je Woche (kg)</h3>
+        <div class="chart-box"><canvas id="chart-volume"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Ø Dauer je Woche (min)</h3>
+        <div class="chart-box"><canvas id="chart-duration"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Trainingstage (letzte 53 Wochen)</h3>
+        <div id="heatmap" class="heatmap" role="img" aria-label="Heatmap der Trainingstage"></div>
+        <div class="heatmap-legend" aria-hidden="true">
+          <span>weniger</span>
+          <i class="lvl-0"></i><i class="lvl-1"></i><i class="lvl-2"></i><i class="lvl-3"></i><i class="lvl-4"></i>
+          <span>mehr Sätze</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="uebungen" class="needs-data" hidden>
+      <h2>Übungen</h2>
+      <div class="card">
+        <label for="exercise-select">Übung (Anzahl Sessions)</label>
+        <select id="exercise-select"></select>
+        <p id="exercise-meta" class="hint"></p>
+        <ul id="exercise-hints" class="hints"></ul>
+        <div class="kpi-grid">
+          <div class="kpi"><span class="kpi-label">Verbesserung</span><span id="exercise-improvement" class="kpi-value"></span><span id="exercise-improvement-sub" class="kpi-sub"></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 id="ex-main-title">e1RM-Verlauf (kg)</h3>
+        <div class="chart-box"><canvas id="chart-ex-main"></canvas></div>
+      </div>
+      <div class="card" id="ex-top-card">
+        <h3>Top-Satz-Gewicht (kg)</h3>
+        <div class="chart-box"><canvas id="chart-ex-top"></canvas></div>
+      </div>
+      <div class="card" id="ex-volume-card">
+        <h3>Volumen je Session (kg)</h3>
+        <div class="chart-box"><canvas id="chart-ex-volume"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Rekorde</h3>
+        <table class="table">
+          <thead><tr><th>Rekord</th><th>Wert</th><th>Datum</th></tr></thead>
+          <tbody id="pr-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="muskelgruppen" class="needs-data" hidden>
+      <h2>Muskelgruppen</h2>
+      <div class="card">
+        <h3>Arbeitssätze pro Woche</h3>
+        <table class="table">
+          <thead><tr><th>Gruppe</th><th class="num">Ø Sätze/Woche (4 Wo.)</th><th class="num">Ø gesamt</th></tr></thead>
+          <tbody id="muscle-body"></tbody>
+        </table>
+        <p class="hint">„unter 10“: weniger als 10 Arbeitssätze pro Woche in den letzten 4 Wochen. Richtwert nach Schoenfeld et al. 2017
+          (mehr Wachstum ab etwa 10 Sätzen pro Woche). Gezählt wird nur die Hauptmuskelgruppe jeder Übung.</p>
+      </div>
+      <div class="card">
+        <h3>Verteilung (gesamter Zeitraum)</h3>
+        <div class="chart-box chart-box-tall"><canvas id="chart-muscle-share"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Sätze je Woche (letzte 12 Wochen)</h3>
+        <div class="chart-box chart-box-tall"><canvas id="chart-muscle-weeks"></canvas></div>
+      </div>
+      <div class="card" id="other-card">
+        <h3>Übungen unter „Sonstiges“</h3>
+        <ul id="other-exercises"></ul>
+      </div>
+    </section>
+
+    <section id="muskelaufbau" class="needs-data" hidden>
+      <h2>Muskelaufbau</h2>
+      <div class="card">
+        <form id="gain-form" class="form">
+          <fieldset>
+            <legend>Geschlecht</legend>
+            <label><input type="radio" name="sex" value="m" checked> Männlich</label>
+            <label><input type="radio" name="sex" value="w"> Weiblich</label>
+          </fieldset>
+          <label for="body-weight">Körpergewicht (kg, optional)</label>
+          <input id="body-weight" name="bodyWeightKg" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="z. B. 80">
+          <label for="experience">Trainingserfahrung vor dem ersten Workout in Hevy</label>
+          <select id="experience" name="experience">
+            <option value="beginner">Anfänger (&lt; 1 Jahr)</option>
+            <option value="some">Etwas Erfahrung (1–3 Jahre)</option>
+            <option value="advanced">Fortgeschritten (&gt; 3 Jahre)</option>
+          </select>
+        </form>
+      </div>
+      <div class="card">
+        <p id="gain-result" class="result"></p>
+        <p class="hint">Schätzung aus Literaturmodellen für gute Bedingungen (Ernährung, Schlaf, Eiweiß), keine Messung.
+          Tatsächliche Werte liegen oft darunter. Ohne Körpergewicht nur McDonald-Modell.</p>
+        <details>
+          <summary>So wird gerechnet</summary>
+          <dl id="gain-details" class="summary"></dl>
+          <p>Je Kalendermonat vom ersten bis zum letzten Workout:</p>
+          <p class="formula">Zuwachs = Anteil des Monats × Potenzial × Konsistenz × Kraftfaktor</p>
+          <ul>
+            <li><b>Potenzial</b> (kg/Monat) nach Trainingsalter (Vorerfahrung + Monate seit dem ersten Workout):
+              McDonald für Männer 0,76–0,94 (1. Jahr), 0,38–0,45 (2. Jahr), 0,19–0,23 (3. Jahr), 0,08–0,11 (danach).
+              Mit Körpergewicht wird die Spanne um Aragon erweitert: 1–1,5 % (Anfänger), 0,5–1 % (Fortgeschritten),
+              0,25–0,5 % (Erfahren) des Körpergewichts pro Monat. Frauen: Faktor 0,5.</li>
+            <li><b>Konsistenz</b> = Workouts im Monat ÷ (3 Workouts pro Woche), höchstens 1.</li>
+            <li><b>Kraftfaktor</b> = 0,5 + Median der e1RM-Verbesserung ÷ 40, begrenzt auf 0,5–1,0 (0 % → 0,5; ab 20 % → 1,0).
+              Berücksichtigt werden Übungen mit mindestens 6 e1RM-Sessions (Ø erste 3 vs. letzte 3), ohne unterstützte Übungen.</li>
+          </ul>
+          <table class="table">
+            <thead><tr><th>Monat</th><th class="num">Anteil</th><th class="num">Trainingsalter</th><th class="num">Potenzial (kg)</th><th class="num">Konsistenz</th><th class="num">Zuwachs (kg)</th></tr></thead>
+            <tbody id="gain-months"></tbody>
+          </table>
+          <p>Quellen:</p>
+          <ul class="sources">
+            <li>Lyle McDonald, „What's My Genetic Muscular Potential?“, bodyrecomposition.com</li>
+            <li>Alan Aragon, Modell der Zuwachsraten nach Trainingsstatus (u. a. in Alan Aragon's Research Review)</li>
+            <li>Faktor für Frauen ≈ 0,5 nach McDonald</li>
+            <li>Schoenfeld, Ogborn, Krieger (2017): Dose-response relationship between weekly resistance training volume and
+              increases in muscle mass. J Sports Sci 35(11)</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+
+    <section id="fakten" class="needs-data" hidden>
+      <h2>Fakten</h2>
+      <div id="facts" class="kpi-grid"></div>
+      <div class="card">
+        <h3>Persönliche Rekorde je Monat (e1RM)</h3>
+        <div class="chart-box"><canvas id="chart-prs"></canvas></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Gym Check · keine Übertragung, kein Server, kein Tracking</p>
+  </footer>
+</body>
+</html>
