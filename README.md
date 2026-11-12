@@ -1,35 +1,37 @@
 # Gym Check
 
-Gym Check zeigt Fortschritt, Kennzahlen, Übungsverläufe, Muskelgruppen-Verteilung und eine Schätzung des
-Muskelaufbaus aus dem CSV-Export der Hevy-App. Statische Web-App, läuft komplett im Browser.
+Visualize your training progress from the [Hevy](https://www.hevyapp.com) CSV export: key figures, progress per
+exercise, sets per muscle group and an estimate of muscle gained. A static web app that runs entirely in your browser.
 
-## Export aus Hevy
+**Open the app: <https://bobtale.github.io/gym-check/>**
 
-Sinngemäß: in Hevy Profil → Einstellungen → Daten exportieren → Workouts exportieren (CSV).
+## Disclaimer
 
-## Nutzung auf Android
+Gym Check is an independent hobby project. It is not affiliated with, endorsed by or connected to Hevy or its makers
+in any way. It does not use Hevy's API, servers or app; it only reads the CSV file you export yourself with Hevy's
+built-in export feature. "Hevy" is a trademark of its respective owner and is mentioned only to describe the supported
+file format.
 
-1. Seite in Chrome öffnen: <https://bobtale.github.io/gym-check/>
-2. Menü → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.
-3. „CSV auswählen“ tippen und die Datei aus „Downloads“ wählen.
+The muscle gain figure is an estimate based on published training models, not a measurement.
 
-Die Daten bleiben gespeichert, „Daten löschen“ entfernt sie. Am Desktop die Datei einfach ins Fenster ziehen.
+## Usage
 
-## Datenschutz
+1. In Hevy: Profile → Settings → Export data → Export workouts (CSV).
+2. Open the app in Chrome on Android and choose "Install app" or "Add to Home screen" from the menu.
+3. Tap "CSV auswählen" and pick the exported file. On desktop you can also drag the file into the window.
 
-Keine Übertragung, kein Server, kein Tracking: die Daten liegen nur im lokalen Speicher des Browsers. Einzige externe
-Ressource ist Chart.js von jsDelivr (ohne Daten). CSV-Dateien sind per `.gitignore` vom Repo ausgeschlossen.
+The data stays stored on the device until you remove it with "Daten löschen". Import a fresh export to update it.
 
-## Hinweis
+## Privacy
 
-Der Muskelaufbau ist eine Schätzung aus Literaturmodellen, keine Messung.
+Your data never leaves your device: no server, no upload, no tracking. The only external resource is Chart.js, loaded
+from jsDelivr without any of your data.
 
-Kein offizielles Produkt von Hevy und nicht mit Hevy verbunden; die App liest nur den CSV-Export, den Hevy selbst anbietet.
-
-## Lizenz
+## License
 
 [MIT](LICENSE)
 
-## Veröffentlichen
-
-GitHub → Settings → Pages → Branch `main`, Ordner `/ (root)`.
+The visual effects in `effects.js` and the related rules in `style.css` are vanilla ports of components from
+[React Bits](https://reactbits.dev) (PillNav, CountUp, SpotlightCard, GradientText, AnimatedContent, StarBorder)
+by David Haz and remain under their license, MIT + Commons Clause, Copyright (c) 2026 David Haz: see
+[LICENSE-react-bits.md](LICENSE-react-bits.md).
