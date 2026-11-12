@@ -6,6 +6,7 @@
 
 import { parseHevyCsv } from './parse.js';
 import { MUSCLE_GROUPS } from './muscles.js';
+import { initEffects, updateNav, countUp, prefersReducedMotion } from './effects.js';
 import {
   overview, timeSeries, exerciseList, exerciseHistory, muscleVolume, funFacts, muscleGainEstimate, heatmap,
 } from './stats.js';
@@ -39,6 +40,7 @@ const state = {
   settings: { ...DEFAULT_SETTINGS },
   period: 'week',
   exerciseKey: null,
+  animateCounts: false,
 };
 
 const charts = new Map();
@@ -181,17 +183,22 @@ function formatWeeks(n) {
 }
 
 /**
- * Creates a key figure card.
+ * Creates a key figure card; with `count` the value counts up once visible, but only right after an import or start.
  * @param {string} label Label.
- * @param {string} value Value.
+ * @param {string} value Value (final text).
  * @param {string} [sub] Additional line.
+ * @param {{to: number, format: function(number): string}} [count] Target number and formatter for the count-up.
  * @returns {HTMLElement} Card element.
  */
-function kpiCard(label, value, sub) {
+function kpiCard(label, value, sub, count) {
   const card = el('div', 'kpi');
-  card.append(el('span', 'kpi-label', label), el('span', 'kpi-value', value));
+  const valueNode = el('span', 'kpi-value', value);
+  card.append(el('span', 'kpi-label', label), valueNode);
   if (sub) {
     card.append(el('span', 'kpi-sub', sub));
+  }
+  if (count && state.animateCounts) {
+    countUp(valueNode, count.to, count.format);
   }
   return card;
 }
@@ -251,6 +258,9 @@ function applyChartTheme() {
   window.Chart.defaults.borderColor = cssVar('--grid');
   window.Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
   window.Chart.defaults.locale = 'de-DE';
+  if (prefersReducedMotion()) {
+    window.Chart.defaults.animation = false;
+  }
 }
 
 /**
@@ -393,16 +403,23 @@ function renderImport() {
 function renderOverview() {
   const o = overview(state.data, state.settings, new Date());
   $('kpis').replaceChildren(
-    kpiCard('Workouts', nf0.format(o.workouts)),
-    kpiCard('Trainingszeit', `${nf1.format(o.totalMinutes / 60)} h`),
-    kpiCard('Volumen', `${nf1.format(o.volumeKg / 1000)} t`, 'Last × Wdh. der Arbeitssätze'),
-    kpiCard('Arbeitssätze', nf0.format(o.workSets), 'ohne Aufwärmsätze'),
-    kpiCard('Wiederholungen', nf0.format(o.reps)),
-    kpiCard('Ø Workouts/Woche', nf1.format(o.avgWorkoutsPerWeek), `über ${formatWeeks(o.weeks)}`),
-    kpiCard('Ø Dauer', o.avgDurationMin === null ? '–' : `${nf0.format(o.avgDurationMin)} min`),
-    kpiCard('Ø Sätze/Workout', nf1.format(o.avgSetsPerWorkout)),
-    kpiCard('Längste Serie', formatWeeks(o.longestStreak), 'in Folge mit Training'),
-    kpiCard('Aktuelle Serie', formatWeeks(o.currentStreak)),
+    kpiCard('Workouts', nf0.format(o.workouts), undefined, { to: o.workouts, format: (n) => nf0.format(n) }),
+    kpiCard('Trainingszeit', `${nf1.format(o.totalMinutes / 60)} h`, undefined,
+      { to: o.totalMinutes / 60, format: (n) => `${nf1.format(n)} h` }),
+    kpiCard('Volumen', `${nf1.format(o.volumeKg / 1000)} t`, 'Last × Wdh. der Arbeitssätze',
+      { to: o.volumeKg / 1000, format: (n) => `${nf1.format(n)} t` }),
+    kpiCard('Arbeitssätze', nf0.format(o.workSets), 'ohne Aufwärmsätze', { to: o.workSets, format: (n) => nf0.format(n) }),
+    kpiCard('Wiederholungen', nf0.format(o.reps), undefined, { to: o.reps, format: (n) => nf0.format(n) }),
+    kpiCard('Ø Workouts/Woche', nf1.format(o.avgWorkoutsPerWeek), `über ${formatWeeks(o.weeks)}`,
+      { to: o.avgWorkoutsPerWeek, format: (n) => nf1.format(n) }),
+    kpiCard('Ø Dauer', o.avgDurationMin === null ? '–' : `${nf0.format(o.avgDurationMin)} min`, undefined,
+      o.avgDurationMin === null ? undefined : { to: o.avgDurationMin, format: (n) => `${nf0.format(n)} min` }),
+    kpiCard('Ø Sätze/Workout', nf1.format(o.avgSetsPerWorkout), undefined,
+      { to: o.avgSetsPerWorkout, format: (n) => nf1.format(n) }),
+    kpiCard('Längste Serie', formatWeeks(o.longestStreak), 'in Folge mit Training',
+      { to: o.longestStreak, format: (n) => formatWeeks(Math.round(n)) }),
+    kpiCard('Aktuelle Serie', formatWeeks(o.currentStreak), undefined,
+      { to: o.currentStreak, format: (n) => formatWeeks(Math.round(n)) }),
     kpiCard('Erstes Workout', formatDate(o.first)),
     kpiCard('Letztes Workout', formatDate(o.last)),
     kpiCard('Lieblingsübung', o.favorite.name, `in ${nf0.format(o.favorite.workouts)} Workouts`),
@@ -418,11 +435,13 @@ function renderOverview() {
  */
 function renderHeatmap() {
   const { cells } = heatmap(state.data);
-  $('heatmap').replaceChildren(...cells.map((c) => {
+  const node = $('heatmap');
+  node.replaceChildren(...cells.map((c) => {
     const cell = el('i', `lvl-${c.level}`);
     cell.title = `${formatDate(c.date)}: ${c.trained ? `${nf0.format(c.sets)} Sätze` : 'kein Training'}`;
     return cell;
   }));
+  node.scrollLeft = node.scrollWidth;
 }
 
 /**
@@ -649,19 +668,23 @@ function renderGain() {
 function renderFacts() {
   const f = funFacts(state.data, state.settings);
   const cards = [
-    kpiCard('Gesamtvolumen', `${nf1.format(f.totalVolumeKg / 1000)} t`, 'Last × Wdh. aller Arbeitssätze'),
-    kpiCard('Gewichtheben in Elefanten', nf1.format(f.elephants), 'Afrikanische Elefanten à 6 t'),
-    kpiCard('In Kleinwagen', nf0.format(f.cars), 'Kleinwagen à 1,3 t'),
-    kpiCard('In Blauwalen', nf1.format(f.blueWhales), 'Blauwale à 150 t'),
-    kpiCard('Wiederholungen gesamt', nf0.format(f.totalReps)),
+    kpiCard('Gesamtvolumen', `${nf1.format(f.totalVolumeKg / 1000)} t`, 'Last × Wdh. aller Arbeitssätze',
+      { to: f.totalVolumeKg / 1000, format: (n) => `${nf1.format(n)} t` }),
+    kpiCard('Gewichtheben in Elefanten', nf1.format(f.elephants), 'Afrikanische Elefanten à 6 t',
+      { to: f.elephants, format: (n) => nf1.format(n) }),
+    kpiCard('In Kleinwagen', nf0.format(f.cars), 'Kleinwagen à 1,3 t', { to: f.cars, format: (n) => nf0.format(n) }),
+    kpiCard('In Blauwalen', nf1.format(f.blueWhales), 'Blauwale à 150 t', { to: f.blueWhales, format: (n) => nf1.format(n) }),
+    kpiCard('Wiederholungen gesamt', nf0.format(f.totalReps), undefined, { to: f.totalReps, format: (n) => nf0.format(n) }),
   ];
   if (f.biggestSession) {
     cards.push(kpiCard('Größte Session', `${nf0.format(f.biggestSession.volumeKg)} kg`,
-      `${f.biggestSession.title}, ${formatDate(f.biggestSession.date)}`));
+      `${f.biggestSession.title}, ${formatDate(f.biggestSession.date)}`,
+      { to: f.biggestSession.volumeKg, format: (n) => `${nf0.format(n)} kg` }));
   }
   if (f.heaviestLift) {
     cards.push(kpiCard('Schwerste Einzellast', `${nf1.format(f.heaviestLift.loadKg)} kg`,
-      `${f.heaviestLift.exercise}, ${formatDate(f.heaviestLift.date)}`));
+      `${f.heaviestLift.exercise}, ${formatDate(f.heaviestLift.date)}`,
+      { to: f.heaviestLift.loadKg, format: (n) => `${nf1.format(n)} kg` }));
   }
   if (f.strongestMonth) {
     cards.push(kpiCard('Stärkster Monat', f.strongestMonth.start.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
@@ -683,6 +706,7 @@ function renderAll() {
   renderImport();
   if (!hasData) {
     destroyCharts();
+    updateNav();
     return;
   }
   applyChartTheme();
@@ -692,6 +716,8 @@ function renderAll() {
   renderMuscles();
   renderGain();
   renderFacts();
+  updateNav();
+  state.animateCounts = false;
 }
 
 /**
@@ -714,6 +740,7 @@ function importText(text, fileName) {
   }
   showError(null);
   state.data = data;
+  state.animateCounts = true;
   state.meta = { fileName, importedAt: new Date().toISOString() };
   state.exerciseKey = null;
   const stored = saveItem(STORAGE.csv, text) && saveItem(STORAGE.meta, JSON.stringify(state.meta));
@@ -755,6 +782,7 @@ function restore() {
   }
   try {
     state.data = parseHevyCsv(text);
+    state.animateCounts = true;
     state.meta = loadJson(STORAGE.meta);
   } catch (e) {
     state.data = null;
@@ -876,6 +904,7 @@ async function registerServiceWorker() {
  */
 function init() {
   $('start-error').hidden = true;
+  initEffects();
   state.settings = loadSettings();
   bindEvents();
   restore();

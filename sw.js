@@ -4,7 +4,7 @@
  */
 
 const CACHE_PREFIX = 'gym-check-';
-const CACHE = `${CACHE_PREFIX}v1`;
+const CACHE = `${CACHE_PREFIX}v2`;
 const NETWORK_TIMEOUT_MS = 3000;
 const CHART_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js';
 const LOCAL_FILES = [
@@ -12,6 +12,7 @@ const LOCAL_FILES = [
   'index.html',
   'style.css',
   'app.js',
+  'effects.js',
   'parse.js',
   'stats.js',
   'muscles.js',
