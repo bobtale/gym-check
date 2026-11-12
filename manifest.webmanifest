@@ -1,0 +1,16 @@
+{
+  "name": "Gym Check",
+  "short_name": "Gym Check",
+  "description": "Fortschritt, Kennzahlen und Muskelgruppen aus dem Hevy-CSV-Export, komplett im Browser.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#f5f6f8",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
