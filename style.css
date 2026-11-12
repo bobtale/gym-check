@@ -270,6 +270,36 @@ a {
   opacity: 1;
 }
 
+.lang-switch {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin-left: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.lang-switch button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 0.36s var(--ease-out), background-color 0.36s var(--ease-out);
+}
+
+.lang-switch button:hover {
+  color: var(--text);
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 main {
   padding: 0 var(--gutter) var(--gutter);
   max-width: var(--max-width);
@@ -769,6 +799,17 @@ details {
   padding: 0 var(--gutter) var(--gutter);
 }
 
+@media (max-width: 479px) {
+  .brand .gradient-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 @media (min-width: 600px) {
   .kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -808,6 +849,10 @@ details {
     -webkit-mask-image: none;
     mask-image: none;
   }
+
+  .lang-switch {
+    margin-left: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -821,6 +866,7 @@ details {
 
   .pill-indicator,
   .pill-nav a,
+  .lang-switch button,
   .card::before,
   .card::after,
   .kpi::before,

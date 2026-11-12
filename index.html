@@ -21,189 +21,195 @@
   <header class="site-header">
     <div class="header-bar">
       <h1 class="brand"><img src="icon.svg" alt="" width="28" height="28"><span class="gradient-text">Gym Check</span></h1>
-      <nav class="pill-nav" aria-label="Abschnitte">
+      <nav class="pill-nav" aria-label="Abschnitte" data-i18n-aria-label="nav.label">
         <span class="pill-indicator" aria-hidden="true"></span>
-        <a href="#import">Import</a>
-        <a href="#ueberblick" class="needs-data" hidden>Überblick</a>
-        <a href="#verlauf" class="needs-data" hidden>Verlauf</a>
-        <a href="#uebungen" class="needs-data" hidden>Übungen</a>
-        <a href="#muskelgruppen" class="needs-data" hidden>Muskelgruppen</a>
-        <a href="#muskelaufbau" class="needs-data" hidden>Muskelaufbau</a>
-        <a href="#fakten" class="needs-data" hidden>Fakten</a>
+        <a href="#import" data-i18n="nav.import">Import</a>
+        <a href="#ueberblick" class="needs-data" hidden data-i18n="nav.overview">Überblick</a>
+        <a href="#verlauf" class="needs-data" hidden data-i18n="nav.history">Verlauf</a>
+        <a href="#uebungen" class="needs-data" hidden data-i18n="nav.exercises">Übungen</a>
+        <a href="#muskelgruppen" class="needs-data" hidden data-i18n="nav.muscles">Muskelgruppen</a>
+        <a href="#muskelaufbau" class="needs-data" hidden data-i18n="nav.gain">Muskelaufbau</a>
+        <a href="#fakten" class="needs-data" hidden data-i18n="nav.facts">Fakten</a>
       </nav>
+      <div class="lang-switch" role="group" aria-label="Sprache" data-i18n-aria-label="lang.group">
+        <button type="button" data-lang="de" lang="de" title="Deutsch" aria-pressed="true">DE</button>
+        <button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button>
+      </div>
     </div>
   </header>
 
   <main>
     <section id="import" class="card">
-      <h2>Import</h2>
-      <p class="hint">Deine Daten bleiben auf diesem Gerät.</p>
+      <h2 data-i18n="nav.import">Import</h2>
+      <p class="hint" data-i18n="import.local">Deine Daten bleiben auf diesem Gerät.</p>
       <div id="import-picker">
         <input id="file-input" type="file" accept=".csv,text/csv,text/comma-separated-values,text/plain">
-        <label class="file-button star-border" for="file-input">CSV auswählen</label>
-        <div id="drop-zone" class="drop-zone">oder die CSV-Datei hierher ziehen</div>
-        <p class="hint">Export in Hevy sinngemäß: Profil → Einstellungen → Daten exportieren → Workouts exportieren (CSV).</p>
+        <label class="file-button star-border" for="file-input" data-i18n="import.choose">CSV auswählen</label>
+        <div id="drop-zone" class="drop-zone" data-i18n="import.drop">oder die CSV-Datei hierher ziehen</div>
+        <p class="hint" data-i18n="import.hevyHint">Export in Hevy sinngemäß: Profil → Einstellungen → Daten exportieren → Workouts exportieren (CSV).</p>
       </div>
-      <p id="start-error" class="error">Die App ist nicht gestartet. Per Doppelklick geöffnet (file://) blockiert der Browser die Skripte: bitte über die veröffentlichte https-Adresse oder einen lokalen Webserver öffnen.</p>
+      <p id="start-error" class="error">Die App ist nicht gestartet. Per Doppelklick geöffnet (file://) blockiert der Browser die Skripte: bitte über die veröffentlichte https-Adresse oder einen lokalen Webserver öffnen.<br>
+        <span lang="en">The app did not start. Opened by double-click (file://), the browser blocks the scripts: please open
+        it via the published https address or a local web server.</span></p>
       <p id="import-error" class="error" role="alert" hidden></p>
       <p id="storage-warning" class="warning" role="status" hidden></p>
       <div id="import-summary" hidden>
         <dl class="summary">
-          <dt>Datei</dt><dd id="sum-file"></dd>
-          <dt>Importiert</dt><dd id="sum-imported"></dd>
-          <dt>Workouts</dt><dd id="sum-workouts"></dd>
-          <dt>Sätze</dt><dd id="sum-sets"></dd>
-          <dt>Übungen</dt><dd id="sum-exercises"></dd>
-          <dt>Zeitraum</dt><dd id="sum-range"></dd>
+          <dt data-i18n="sum.file">Datei</dt><dd id="sum-file"></dd>
+          <dt data-i18n="sum.imported">Importiert</dt><dd id="sum-imported"></dd>
+          <dt data-i18n="sum.workouts">Workouts</dt><dd id="sum-workouts"></dd>
+          <dt data-i18n="sum.sets">Sätze</dt><dd id="sum-sets"></dd>
+          <dt data-i18n="sum.exercises">Übungen</dt><dd id="sum-exercises"></dd>
+          <dt data-i18n="sum.range">Zeitraum</dt><dd id="sum-range"></dd>
         </dl>
         <ul id="import-warnings" class="warnings"></ul>
         <div class="button-row">
-          <button type="button" id="btn-other">Andere Datei</button>
-          <button type="button" id="btn-clear" class="danger">Daten löschen</button>
+          <button type="button" id="btn-other" data-i18n="import.other">Andere Datei</button>
+          <button type="button" id="btn-clear" class="danger" data-i18n="import.clear">Daten löschen</button>
         </div>
       </div>
     </section>
 
     <section id="ueberblick" class="needs-data" hidden>
-      <h2>Überblick</h2>
+      <h2 data-i18n="nav.overview">Überblick</h2>
       <div id="kpis" class="kpi-grid"></div>
-      <p id="overview-note" class="hint" hidden>Unterstützte Übungen zählen ohne Körpergewicht mit 0 kg Volumen. Körpergewicht unter „Muskelaufbau“ eintragen.</p>
+      <p id="overview-note" class="hint" hidden data-i18n="overview.note">Unterstützte Übungen zählen ohne Körpergewicht mit 0 kg Volumen. Körpergewicht unter „Muskelaufbau“ eintragen.</p>
     </section>
 
     <section id="verlauf" class="needs-data" hidden>
-      <h2>Verlauf</h2>
+      <h2 data-i18n="nav.history">Verlauf</h2>
       <div class="card wide">
         <div class="card-head">
-          <h3>Workouts</h3>
-          <div class="toggle" role="group" aria-label="Zeitraum">
-            <button type="button" data-period="week" aria-pressed="true">Woche</button>
-            <button type="button" data-period="month" aria-pressed="false">Monat</button>
+          <h3 data-i18n="history.workouts">Workouts</h3>
+          <div class="toggle" role="group" aria-label="Zeitraum" data-i18n-aria-label="history.period">
+            <button type="button" data-period="week" aria-pressed="true" data-i18n="history.week">Woche</button>
+            <button type="button" data-period="month" aria-pressed="false" data-i18n="history.month">Monat</button>
           </div>
         </div>
         <div class="chart-box"><canvas id="chart-workouts"></canvas></div>
       </div>
       <div class="card">
-        <h3>Volumen je Woche (kg)</h3>
+        <h3 data-i18n="history.volume">Volumen je Woche (kg)</h3>
         <div class="chart-box"><canvas id="chart-volume"></canvas></div>
       </div>
       <div class="card">
-        <h3>Ø Dauer je Woche (min)</h3>
+        <h3 data-i18n="history.duration">Ø Dauer je Woche (min)</h3>
         <div class="chart-box"><canvas id="chart-duration"></canvas></div>
       </div>
       <div class="card wide">
-        <h3>Trainingstage (letzte 53 Wochen)</h3>
-        <div id="heatmap" class="heatmap" role="img" aria-label="Heatmap der Trainingstage"></div>
+        <h3 data-i18n="history.days">Trainingstage (letzte 53 Wochen)</h3>
+        <div id="heatmap" class="heatmap" role="img" aria-label="Heatmap der Trainingstage" data-i18n-aria-label="history.heatmapLabel"></div>
         <div class="heatmap-legend" aria-hidden="true">
-          <span>weniger</span>
+          <span data-i18n="history.less">weniger</span>
           <i class="lvl-0"></i><i class="lvl-1"></i><i class="lvl-2"></i><i class="lvl-3"></i><i class="lvl-4"></i>
-          <span>mehr Sätze</span>
+          <span data-i18n="history.more">mehr Sätze</span>
         </div>
       </div>
     </section>
 
     <section id="uebungen" class="needs-data" hidden>
-      <h2>Übungen</h2>
+      <h2 data-i18n="nav.exercises">Übungen</h2>
       <div class="card wide">
-        <label for="exercise-select">Übung (Anzahl Sessions)</label>
+        <label for="exercise-select" data-i18n="ex.select">Übung (Anzahl Sessions)</label>
         <select id="exercise-select"></select>
         <p id="exercise-meta" class="hint"></p>
         <ul id="exercise-hints" class="hints"></ul>
         <div class="kpi-grid">
-          <div class="kpi"><span class="kpi-label">Verbesserung</span><span id="exercise-improvement" class="kpi-value"></span><span id="exercise-improvement-sub" class="kpi-sub"></span></div>
+          <div class="kpi"><span class="kpi-label" data-i18n="ex.improvement">Verbesserung</span><span id="exercise-improvement" class="kpi-value"></span><span id="exercise-improvement-sub" class="kpi-sub"></span></div>
         </div>
       </div>
       <div class="card">
-        <h3 id="ex-main-title">e1RM-Verlauf (kg)</h3>
+        <h3 id="ex-main-title" data-i18n="metricTitle.e1rm">e1RM-Verlauf (kg)</h3>
         <div class="chart-box"><canvas id="chart-ex-main"></canvas></div>
       </div>
       <div class="card" id="ex-top-card">
-        <h3>Top-Satz-Gewicht (kg)</h3>
+        <h3 data-i18n="ex.topTitle">Top-Satz-Gewicht (kg)</h3>
         <div class="chart-box"><canvas id="chart-ex-top"></canvas></div>
       </div>
       <div class="card" id="ex-volume-card">
-        <h3>Volumen je Session (kg)</h3>
+        <h3 data-i18n="ex.volumeTitle">Volumen je Session (kg)</h3>
         <div class="chart-box"><canvas id="chart-ex-volume"></canvas></div>
       </div>
       <div class="card">
-        <h3>Rekorde</h3>
+        <h3 data-i18n="ex.records">Rekorde</h3>
         <table class="table">
-          <thead><tr><th>Rekord</th><th>Wert</th><th>Datum</th></tr></thead>
+          <thead><tr><th data-i18n="ex.thRecord">Rekord</th><th data-i18n="ex.thValue">Wert</th><th data-i18n="ex.thDate">Datum</th></tr></thead>
           <tbody id="pr-body"></tbody>
         </table>
       </div>
     </section>
 
     <section id="muskelgruppen" class="needs-data" hidden>
-      <h2>Muskelgruppen</h2>
+      <h2 data-i18n="nav.muscles">Muskelgruppen</h2>
       <div class="card">
-        <h3>Arbeitssätze pro Woche</h3>
+        <h3 data-i18n="muscles.setsPerWeek">Arbeitssätze pro Woche</h3>
         <table class="table">
-          <thead><tr><th>Gruppe</th><th class="num">Letzte 4 Wo.</th><th class="num">Gesamt</th></tr></thead>
+          <thead><tr><th data-i18n="muscles.thGroup">Gruppe</th><th class="num" data-i18n="muscles.thRecent">Letzte 4 Wo.</th><th class="num" data-i18n="muscles.thTotal">Gesamt</th></tr></thead>
           <tbody id="muscle-body"></tbody>
         </table>
-        <p class="hint">„unter 10“: weniger als 10 Arbeitssätze pro Woche in den letzten 4 Wochen. Richtwert nach Schoenfeld et al. 2017
+        <p class="hint" data-i18n="muscles.hint">„unter 10“: weniger als 10 Arbeitssätze pro Woche in den letzten 4 Wochen. Richtwert nach Schoenfeld et al. 2017
           (mehr Wachstum ab etwa 10 Sätzen pro Woche). Gezählt wird nur die Hauptmuskelgruppe jeder Übung.</p>
       </div>
       <div class="card">
-        <h3>Verteilung (gesamter Zeitraum)</h3>
+        <h3 data-i18n="muscles.share">Verteilung (gesamter Zeitraum)</h3>
         <div class="chart-box chart-box-tall"><canvas id="chart-muscle-share"></canvas></div>
       </div>
       <div class="card wide">
-        <h3>Sätze je Woche (letzte 12 Wochen)</h3>
+        <h3 data-i18n="muscles.weeks">Sätze je Woche (letzte 12 Wochen)</h3>
         <div class="chart-box chart-box-tall"><canvas id="chart-muscle-weeks"></canvas></div>
       </div>
       <div class="card wide" id="other-card">
-        <h3>Übungen unter „Sonstiges“</h3>
+        <h3 data-i18n="muscles.other">Übungen unter „Sonstiges“</h3>
         <ul id="other-exercises"></ul>
       </div>
     </section>
 
     <section id="muskelaufbau" class="needs-data" hidden>
-      <h2>Muskelaufbau</h2>
+      <h2 data-i18n="nav.gain">Muskelaufbau</h2>
       <div class="card">
         <form id="gain-form" class="form">
           <fieldset>
-            <legend>Geschlecht</legend>
-            <label><input type="radio" name="sex" value="m" checked> Männlich</label>
-            <label><input type="radio" name="sex" value="w"> Weiblich</label>
+            <legend data-i18n="gain.sex">Geschlecht</legend>
+            <label><input type="radio" name="sex" value="m" checked> <span data-i18n="gain.male">Männlich</span></label>
+            <label><input type="radio" name="sex" value="w"> <span data-i18n="gain.female">Weiblich</span></label>
           </fieldset>
-          <label for="body-weight">Körpergewicht (kg, optional)</label>
-          <input id="body-weight" name="bodyWeightKg" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="z. B. 80">
-          <label for="experience">Trainingserfahrung vor dem ersten Workout in Hevy</label>
+          <label for="body-weight" data-i18n="gain.bodyWeight">Körpergewicht (kg, optional)</label>
+          <input id="body-weight" name="bodyWeightKg" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="z. B. 80" data-i18n-placeholder="gain.bodyWeightPlaceholder">
+          <label for="experience" data-i18n="gain.experience">Trainingserfahrung vor dem ersten Workout in Hevy</label>
           <select id="experience" name="experience">
-            <option value="beginner">Anfänger (&lt; 1 Jahr)</option>
-            <option value="some">Etwas Erfahrung (1–3 Jahre)</option>
-            <option value="advanced">Fortgeschritten (&gt; 3 Jahre)</option>
+            <option value="beginner" data-i18n="gain.expBeginner">Anfänger (&lt; 1 Jahr)</option>
+            <option value="some" data-i18n="gain.expSome">Etwas Erfahrung (1–3 Jahre)</option>
+            <option value="advanced" data-i18n="gain.expAdvanced">Fortgeschritten (&gt; 3 Jahre)</option>
           </select>
         </form>
       </div>
       <div class="card">
         <p id="gain-result" class="result"></p>
-        <p class="hint">Schätzung aus Literaturmodellen für gute Bedingungen (Ernährung, Schlaf, Eiweiß), keine Messung.
+        <p class="hint" data-i18n="gain.hint">Schätzung aus Literaturmodellen für gute Bedingungen (Ernährung, Schlaf, Eiweiß), keine Messung.
           Tatsächliche Werte liegen oft darunter. Ohne Körpergewicht nur McDonald-Modell.</p>
         <details>
-          <summary>So wird gerechnet</summary>
+          <summary data-i18n="gain.howTo">So wird gerechnet</summary>
           <dl id="gain-details" class="summary"></dl>
-          <p>Je Kalendermonat vom ersten bis zum letzten Workout:</p>
-          <p class="formula">Zuwachs = Anteil des Monats × Potenzial × Konsistenz × Kraftfaktor</p>
+          <p data-i18n="gain.perMonth">Je Kalendermonat vom ersten bis zum letzten Workout:</p>
+          <p class="formula" data-i18n="gain.formula">Zuwachs = Anteil des Monats × Potenzial × Konsistenz × Kraftfaktor</p>
           <ul>
-            <li><b>Potenzial</b> (kg/Monat) nach Trainingsalter (Vorerfahrung + Monate seit dem ersten Workout):
+            <li><b data-i18n="gain.potential">Potenzial</b> <span data-i18n="gain.potentialText">(kg/Monat) nach Trainingsalter (Vorerfahrung + Monate seit dem ersten Workout):
               McDonald für Männer 0,76–0,94 (1. Jahr), 0,38–0,45 (2. Jahr), 0,19–0,23 (3. Jahr), 0,08–0,11 (danach).
               Mit Körpergewicht wird die Spanne um Aragon erweitert: 1–1,5 % (Anfänger), 0,5–1 % (Fortgeschritten),
-              0,25–0,5 % (Erfahren) des Körpergewichts pro Monat. Frauen: Faktor 0,5.</li>
-            <li><b>Konsistenz</b> = Workouts im Monat ÷ (3 Workouts pro Woche), höchstens 1.</li>
-            <li><b>Kraftfaktor</b> = 0,5 + Median der e1RM-Verbesserung ÷ 40, begrenzt auf 0,5–1,0 (0 % → 0,5; ab 20 % → 1,0).
-              Berücksichtigt werden Übungen mit mindestens 6 e1RM-Sessions (Ø erste 3 vs. letzte 3), ohne unterstützte Übungen.</li>
+              0,25–0,5 % (Erfahren) des Körpergewichts pro Monat. Frauen: Faktor 0,5.</span></li>
+            <li><b data-i18n="gain.consistency">Konsistenz</b> <span data-i18n="gain.consistencyText">= Workouts im Monat ÷ (3 Workouts pro Woche), höchstens 1.</span></li>
+            <li><b data-i18n="gain.strength">Kraftfaktor</b> <span data-i18n="gain.strengthText">= 0,5 + Median der e1RM-Verbesserung ÷ 40, begrenzt auf 0,5–1,0 (0 % → 0,5; ab 20 % → 1,0).
+              Berücksichtigt werden Übungen mit mindestens 6 e1RM-Sessions (Ø erste 3 vs. letzte 3), ohne unterstützte Übungen.</span></li>
           </ul>
           <table class="table">
-            <thead><tr><th>Monat</th><th class="num">Anteil</th><th class="num">Trainingsalter</th><th class="num">Potenzial (kg)</th><th class="num">Konsistenz</th><th class="num">Zuwachs (kg)</th></tr></thead>
+            <thead><tr><th data-i18n="gain.thMonth">Monat</th><th class="num" data-i18n="gain.thShare">Anteil</th><th class="num" data-i18n="gain.thAge">Trainingsalter</th><th class="num" data-i18n="gain.thPotential">Potenzial (kg)</th><th class="num" data-i18n="gain.thConsistency">Konsistenz</th><th class="num" data-i18n="gain.thGain">Zuwachs (kg)</th></tr></thead>
             <tbody id="gain-months"></tbody>
           </table>
-          <p>Quellen:</p>
+          <p data-i18n="gain.sources">Quellen:</p>
           <ul class="sources">
-            <li>Lyle McDonald, „What's My Genetic Muscular Potential?“, bodyrecomposition.com</li>
-            <li>Alan Aragon, Modell der Zuwachsraten nach Trainingsstatus (u. a. in Alan Aragon's Research Review)</li>
-            <li>Faktor für Frauen ≈ 0,5 nach McDonald</li>
+            <li data-i18n="gain.srcMcDonald">Lyle McDonald, „What's My Genetic Muscular Potential?“, bodyrecomposition.com</li>
+            <li data-i18n="gain.srcAragon">Alan Aragon, Modell der Zuwachsraten nach Trainingsstatus (u. a. in Alan Aragon's Research Review)</li>
+            <li data-i18n="gain.srcFemale">Faktor für Frauen ≈ 0,5 nach McDonald</li>
             <li>Schoenfeld, Ogborn, Krieger (2017): Dose-response relationship between weekly resistance training volume and
               increases in muscle mass. J Sports Sci 35(11)</li>
           </ul>
@@ -212,19 +218,19 @@
     </section>
 
     <section id="fakten" class="needs-data" hidden>
-      <h2>Fakten</h2>
+      <h2 data-i18n="nav.facts">Fakten</h2>
       <div id="facts" class="kpi-grid"></div>
       <div class="card wide">
-        <h3>Persönliche Rekorde je Monat (e1RM)</h3>
+        <h3 data-i18n="facts.prsTitle">Persönliche Rekorde je Monat (e1RM)</h3>
         <div class="chart-box"><canvas id="chart-prs"></canvas></div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>Gym Check · keine Übertragung, kein Server, kein Tracking</p>
-    <p>Kein offizielles Produkt von Hevy, nicht mit Hevy verbunden.</p>
-    <p>Datenschutz: Die App speichert deine Daten nur in diesem Browser und überträgt nichts. Die Seite wird von GitHub Pages ausgeliefert; dabei verarbeitet GitHub technisch nötige Zugriffsdaten wie die IP-Adresse, siehe <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">Datenschutzerklärung von GitHub</a>.</p>
+    <p data-i18n="footer.tagline">Gym Check · keine Übertragung, kein Server, kein Tracking</p>
+    <p data-i18n="footer.hevy">Kein offizielles Produkt von Hevy, nicht mit Hevy verbunden.</p>
+    <p><span data-i18n="footer.privacy">Datenschutz: Die App speichert deine Daten nur in diesem Browser und überträgt nichts. Die Seite wird von GitHub Pages ausgeliefert; dabei verarbeitet GitHub technisch nötige Zugriffsdaten wie die IP-Adresse, siehe</span> <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener" data-i18n="footer.privacyLink">Datenschutzerklärung von GitHub</a>.</p>
   </footer>
 </body>
 </html>

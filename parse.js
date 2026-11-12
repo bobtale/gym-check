@@ -5,6 +5,7 @@
  */
 
 import { muscleGroupOf } from './muscles.js';
+import { t } from './i18n.js';
 
 const LBS_TO_KG = 0.45359237;
 const MILES_TO_KM = 1.609344;
@@ -188,7 +189,8 @@ function cell(ctx, r, name) {
 
 /**
  * Parses a numeric cell, warning once per column about invalid values.
- * @param {{col: Object<string, number>, warnings: string[], invalidColumns: Set<string>}} ctx Parse context.
+ * @param {{col: Object<string, number>, warnings: {key: string, args: Array}[], invalidColumns: Set<string>}} ctx Parse
+ *   context.
  * @param {string[]} r Record.
  * @param {string|null} name Column name.
  * @param {number} line Line number for the warning.
@@ -203,7 +205,7 @@ function cellNumber(ctx, r, name, line) {
   if (Number.isNaN(value)) {
     if (!ctx.invalidColumns.has(name)) {
       ctx.invalidColumns.add(name);
-      ctx.warnings.push(`Ungültige Zahl in Spalte "${name}" (Zeile ${line}: "${raw}"), Wert ignoriert.`);
+      ctx.warnings.push({ key: 'parse.invalidNumber', args: [name, line, raw] });
     }
     return null;
   }
@@ -211,7 +213,7 @@ function cellNumber(ctx, r, name, line) {
 }
 
 /**
- * Parses a date cell or throws the German import error.
+ * Parses a date cell or throws the import error in the current language.
  * @param {string} value Raw date text.
  * @param {number} line Line number for the error.
  * @returns {Date} Parsed date.
@@ -220,36 +222,37 @@ function cellDate(value, line) {
   try {
     return parseHevyDate(value);
   } catch {
-    throw new Error(`Datum nicht erkannt in Zeile ${line}: "${value}". Erwartet z. B. "11 Nov. 2026, 12:50".`);
+    throw new Error(t('parse.dateError', line, value));
   }
 }
 
 /**
  * Parses a Hevy CSV export.
  * @param {string} text Raw CSV text.
- * @returns {{workouts: object[], exercises: Map<string, object>, setCount: number, warnings: string[]}}
- *   Workouts sorted by start, exercise infos by key, total set count and German warnings.
- * @throws {Error} With a German message if a required column is missing or a date cannot be parsed.
+ * @returns {{workouts: object[], exercises: Map<string, object>, setCount: number, warnings: {key: string, args: Array}[]}}
+ *   Workouts sorted by start, exercise infos by key, total set count and warnings as i18n.js keys with arguments,
+ *   so they can be translated when shown.
+ * @throws {Error} With a message in the current language if a required column is missing or a date cannot be parsed.
  */
 export function parseHevyCsv(text) {
   const rows = parseCsv(text);
   const header = (rows[0] ?? []).map((h) => h.trim().toLowerCase());
   const col = Object.fromEntries(header.map((h, i) => [h, i]));
-  const headerText = header.join(', ') || '(leer)';
+  const headerText = header.join(', ') || t('parse.emptyHeader');
   const weightCol = 'weight_kg' in col ? 'weight_kg' : 'weight_lbs' in col ? 'weight_lbs' : null;
   const missing = REQUIRED_COLUMNS.find((c) => !(c in col)) ?? (weightCol ? null : 'weight_kg');
   if (missing) {
-    throw new Error(`Keine Hevy-CSV: Spalte "${missing}" fehlt. Gefunden: ${headerText}`);
+    throw new Error(t('parse.missingColumn', missing, headerText));
   }
   const distanceCol = 'distance_km' in col ? 'distance_km' : 'distance_miles' in col ? 'distance_miles' : null;
   const weightFactor = weightCol === 'weight_lbs' ? LBS_TO_KG : 1;
   const distanceFactor = distanceCol === 'distance_miles' ? MILES_TO_KM : 1;
   const warnings = [];
   if (weightCol === 'weight_lbs') {
-    warnings.push('Gewicht in lbs erkannt, in kg umgerechnet.');
+    warnings.push({ key: 'parse.lbs', args: [] });
   }
   if (distanceCol === 'distance_miles') {
-    warnings.push('Distanz in Meilen erkannt, in km umgerechnet.');
+    warnings.push({ key: 'parse.miles', args: [] });
   }
 
   const ctx = { col, warnings, invalidColumns: new Set() };
@@ -262,7 +265,7 @@ export function parseHevyCsv(text) {
     const line = i + 1;
     if (r.length < header.length) {
       if (!(r.length === 1 && r[0].trim() === '')) {
-        warnings.push(`Zeile ${line} ist unvollständig und wurde übersprungen.`);
+        warnings.push({ key: 'parse.incompleteLine', args: [line] });
       }
       continue;
     }

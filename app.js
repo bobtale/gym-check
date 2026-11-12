@@ -7,32 +7,21 @@
 import { parseHevyCsv } from './parse.js';
 import { MUSCLE_GROUPS } from './muscles.js';
 import { initEffects, updateNav, countUp, prefersReducedMotion } from './effects.js';
+import { t, setLanguage, language, locale, LANGUAGES, DEFAULT_LANGUAGE } from './i18n.js';
 import {
   overview, timeSeries, exerciseList, exerciseHistory, muscleVolume, funFacts, muscleGainEstimate, heatmap,
 } from './stats.js';
 
-const STORAGE = { csv: 'gymcheck.csv', meta: 'gymcheck.meta', settings: 'gymcheck.settings' };
+const STORAGE = { csv: 'gymcheck.csv', meta: 'gymcheck.meta', settings: 'gymcheck.settings', lang: 'gymcheck.lang' };
 const STORAGE_PREFIX = 'gymcheck.';
 const DEFAULT_SETTINGS = { sex: 'm', bodyWeightKg: null, experience: 'beginner' };
 const EXPERIENCES = ['beginner', 'some', 'advanced'];
-const STORAGE_WARNING = 'Daten konnten nicht lokal gespeichert werden, Import gilt nur für diese Sitzung.';
-const OFFLINE_CHARTS = 'Diagramme offline nicht verfügbar';
+const I18N_ATTRIBUTES = ['aria-label', 'placeholder', 'title'];
 
-const METRIC_TITLES = {
-  e1rm: 'e1RM-Verlauf (kg)',
-  assist: 'Unterstützung (kg) – weniger ist besser',
-  topLoad: 'Top-Satz-Gewicht (kg)',
-  reps: 'Max. Wiederholungen je Session',
-  duration: 'Längste Dauer je Session (min)',
-};
-const METRIC_NAMES = {
-  e1rm: 'e1RM', assist: 'geringste Unterstützung', topLoad: 'Top-Satz-Gewicht', reps: 'max. Wiederholungen', duration: 'Dauer',
-};
-
-const nf0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
-const nf1 = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const nf2 = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const nfSigned = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+let nf0;
+let nf1;
+let nf2;
+let nfSigned;
 
 const state = {
   data: null,
@@ -44,6 +33,17 @@ const state = {
 };
 
 const charts = new Map();
+
+/**
+ * Builds the number formatters for the locale of the current language.
+ * @returns {void}
+ */
+function createNumberFormats() {
+  nf0 = new Intl.NumberFormat(locale(), { maximumFractionDigits: 0 });
+  nf1 = new Intl.NumberFormat(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  nf2 = new Intl.NumberFormat(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  nfSigned = new Intl.NumberFormat(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+}
 
 /**
  * Shorthand for document.getElementById.
@@ -154,12 +154,12 @@ function el(tag, className, text) {
 }
 
 /**
- * Formats a date as German date.
+ * Formats a date in the locale of the current language.
  * @param {Date} date Date.
  * @returns {string} Date text.
  */
 function formatDate(date) {
-  return date.toLocaleDateString('de-DE');
+  return date.toLocaleDateString(locale());
 }
 
 /**
@@ -179,7 +179,7 @@ function formatDuration(seconds) {
  * @returns {string} Text such as "3 Wochen".
  */
 function formatWeeks(n) {
-  return n === 1 ? '1 Woche' : `${nf0.format(n)} Wochen`;
+  return t('weeks', n, nf0.format(n));
 }
 
 /**
@@ -247,6 +247,15 @@ function groupColor(group) {
 }
 
 /**
+ * Returns the display name of a muscle group in the current language.
+ * @param {string} group Muscle group id (German name from muscles.js).
+ * @returns {string} Display name.
+ */
+function groupLabel(group) {
+  return t('muscleGroups')[group] ?? group;
+}
+
+/**
  * Applies theme colors and locale to the Chart.js defaults.
  * @returns {void}
  */
@@ -257,7 +266,7 @@ function applyChartTheme() {
   window.Chart.defaults.color = cssVar('--muted');
   window.Chart.defaults.borderColor = cssVar('--grid');
   window.Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-  window.Chart.defaults.locale = 'de-DE';
+  window.Chart.defaults.locale = locale();
   if (prefersReducedMotion()) {
     window.Chart.defaults.animation = false;
   }
@@ -294,9 +303,8 @@ function renderChart(id, config) {
   if (!window.Chart) {
     canvas.hidden = true;
     box.classList.add('offline');
-    if (!box.querySelector('.chart-fallback')) {
-      box.append(el('p', 'chart-fallback', OFFLINE_CHARTS));
-    }
+    const fallback = box.querySelector('.chart-fallback') ?? box.appendChild(el('p', 'chart-fallback'));
+    fallback.textContent = t('chart.offline');
     return;
   }
   charts.set(id, new window.Chart(canvas, {
@@ -370,7 +378,7 @@ function showError(message) {
  */
 function showStorageWarning(visible) {
   const node = $('storage-warning');
-  node.textContent = visible ? STORAGE_WARNING : '';
+  node.textContent = visible ? t('storageWarning') : '';
   node.hidden = !visible;
 }
 
@@ -388,12 +396,12 @@ function renderImport() {
   const first = data.workouts[0].start;
   const last = data.workouts[data.workouts.length - 1].start;
   $('sum-file').textContent = meta?.fileName ?? '–';
-  $('sum-imported').textContent = meta?.importedAt ? new Date(meta.importedAt).toLocaleString('de-DE') : '–';
+  $('sum-imported').textContent = meta?.importedAt ? new Date(meta.importedAt).toLocaleString(locale()) : '–';
   $('sum-workouts').textContent = nf0.format(data.workouts.length);
   $('sum-sets').textContent = nf0.format(data.setCount);
   $('sum-exercises').textContent = nf0.format(data.exercises.size);
   $('sum-range').textContent = `${formatDate(first)} – ${formatDate(last)}`;
-  $('import-warnings').replaceChildren(...data.warnings.map((w) => el('li', '', w)));
+  $('import-warnings').replaceChildren(...data.warnings.map((w) => el('li', '', t(w.key, ...w.args))));
 }
 
 /**
@@ -403,28 +411,28 @@ function renderImport() {
 function renderOverview() {
   const o = overview(state.data, state.settings, new Date());
   $('kpis').replaceChildren(
-    kpiCard('Workouts', nf0.format(o.workouts), undefined, { to: o.workouts, format: (n) => nf0.format(n) }),
-    kpiCard('Trainingszeit', `${nf1.format(o.totalMinutes / 60)} h`, undefined,
+    kpiCard(t('kpi.workouts'), nf0.format(o.workouts), undefined, { to: o.workouts, format: (n) => nf0.format(n) }),
+    kpiCard(t('kpi.time'), `${nf1.format(o.totalMinutes / 60)} h`, undefined,
       { to: o.totalMinutes / 60, format: (n) => `${nf1.format(n)} h` }),
-    kpiCard('Volumen', `${nf1.format(o.volumeKg / 1000)} t`, 'Last × Wdh. der Arbeitssätze',
+    kpiCard(t('kpi.volume'), `${nf1.format(o.volumeKg / 1000)} t`, t('kpi.volumeSub'),
       { to: o.volumeKg / 1000, format: (n) => `${nf1.format(n)} t` }),
-    kpiCard('Arbeitssätze', nf0.format(o.workSets), 'ohne Aufwärmsätze', { to: o.workSets, format: (n) => nf0.format(n) }),
-    kpiCard('Wiederholungen', nf0.format(o.reps), undefined, { to: o.reps, format: (n) => nf0.format(n) }),
-    kpiCard('Ø Workouts/Woche', nf1.format(o.avgWorkoutsPerWeek), `über ${formatWeeks(o.weeks)}`,
+    kpiCard(t('kpi.workSets'), nf0.format(o.workSets), t('kpi.workSetsSub'), { to: o.workSets, format: (n) => nf0.format(n) }),
+    kpiCard(t('kpi.reps'), nf0.format(o.reps), undefined, { to: o.reps, format: (n) => nf0.format(n) }),
+    kpiCard(t('kpi.avgWorkouts'), nf1.format(o.avgWorkoutsPerWeek), t('kpi.overWeeks', formatWeeks(o.weeks)),
       { to: o.avgWorkoutsPerWeek, format: (n) => nf1.format(n) }),
-    kpiCard('Ø Dauer', o.avgDurationMin === null ? '–' : `${nf0.format(o.avgDurationMin)} min`, undefined,
+    kpiCard(t('kpi.avgDuration'), o.avgDurationMin === null ? '–' : `${nf0.format(o.avgDurationMin)} min`, undefined,
       o.avgDurationMin === null ? undefined : { to: o.avgDurationMin, format: (n) => `${nf0.format(n)} min` }),
-    kpiCard('Ø Sätze/Workout', nf1.format(o.avgSetsPerWorkout), undefined,
+    kpiCard(t('kpi.avgSets'), nf1.format(o.avgSetsPerWorkout), undefined,
       { to: o.avgSetsPerWorkout, format: (n) => nf1.format(n) }),
-    kpiCard('Längste Serie', formatWeeks(o.longestStreak), 'in Folge mit Training',
+    kpiCard(t('kpi.longestStreak'), formatWeeks(o.longestStreak), t('kpi.streakSub'),
       { to: o.longestStreak, format: (n) => formatWeeks(Math.round(n)) }),
-    kpiCard('Aktuelle Serie', formatWeeks(o.currentStreak), undefined,
+    kpiCard(t('kpi.currentStreak'), formatWeeks(o.currentStreak), undefined,
       { to: o.currentStreak, format: (n) => formatWeeks(Math.round(n)) }),
-    kpiCard('Erstes Workout', formatDate(o.first)),
-    kpiCard('Letztes Workout', formatDate(o.last)),
-    kpiCard('Lieblingsübung', o.favorite.name, `in ${nf0.format(o.favorite.workouts)} Workouts`),
-    kpiCard('Häufigster Wochentag', o.topWeekday.name, `${nf0.format(o.topWeekday.count)} Workouts`),
-    kpiCard('Häufigste Tageszeit', o.topDayTime.name, `${nf0.format(o.topDayTime.count)} Workouts`),
+    kpiCard(t('kpi.first'), formatDate(o.first)),
+    kpiCard(t('kpi.last'), formatDate(o.last)),
+    kpiCard(t('kpi.favorite'), o.favorite.name, t('kpi.inWorkouts', nf0.format(o.favorite.workouts))),
+    kpiCard(t('kpi.weekday'), o.topWeekday.name, t('kpi.workoutsCount', nf0.format(o.topWeekday.count))),
+    kpiCard(t('kpi.dayTime'), o.topDayTime.name, t('kpi.workoutsCount', nf0.format(o.topDayTime.count))),
   );
   $('overview-note').hidden = !o.assistedWithoutWeight;
 }
@@ -438,7 +446,7 @@ function renderHeatmap() {
   const node = $('heatmap');
   node.replaceChildren(...cells.map((c) => {
     const cell = el('i', `lvl-${c.level}`);
-    cell.title = `${formatDate(c.date)}: ${c.trained ? `${nf0.format(c.sets)} Sätze` : 'kein Training'}`;
+    cell.title = c.trained ? t('heatmap.sets', formatDate(c.date), nf0.format(c.sets)) : t('heatmap.none', formatDate(c.date));
     return cell;
   }));
   node.scrollLeft = node.scrollWidth;
@@ -452,14 +460,14 @@ function renderHistory() {
   const series = timeSeries(state.data, state.settings);
   const periods = state.period === 'month' ? series.months : series.weeks;
   document.querySelectorAll('[data-period]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.period === state.period)));
-  renderChart('chart-workouts', barConfig(periods.map((p) => p.label), periods.map((p) => p.workouts), 'Workouts'));
-  renderChart('chart-volume', barConfig(series.weeks.map((w) => w.label), series.weeks.map((w) => Math.round(w.volumeKg)), 'Volumen (kg)'));
+  renderChart('chart-workouts', barConfig(periods.map((p) => p.label), periods.map((p) => p.workouts), t('chart.workouts')));
+  renderChart('chart-volume', barConfig(series.weeks.map((w) => w.label), series.weeks.map((w) => Math.round(w.volumeKg)), t('chart.volume')));
   renderChart('chart-duration', {
     type: 'line',
     data: {
       labels: series.weeks.map((w) => w.label),
       datasets: [{
-        label: 'Ø Dauer (min)',
+        label: t('chart.duration'),
         data: series.weeks.map((w) => (w.avgDurationMin === null ? null : Math.round(w.avgDurationMin))),
         borderColor: cssVar('--accent'),
         backgroundColor: cssVar('--accent'),
@@ -482,23 +490,23 @@ function recordRows(h) {
   const { prs, info, assistOnly } = h;
   const rows = [];
   if (prs.heaviest) {
-    const label = assistOnly ? 'Geringste Unterstützung' : info.assisted ? 'Höchste effektive Last' : 'Schwerstes Gewicht';
+    const label = assistOnly ? t('pr.lowestAssist') : info.assisted ? t('pr.highestEffective') : t('pr.heaviest');
     rows.push([label, `${nf1.format(prs.heaviest.value)} kg`, prs.heaviest.date]);
   }
   if (prs.e1rm) {
-    rows.push(['Bestes e1RM', `${nf1.format(prs.e1rm.value)} kg`, prs.e1rm.date]);
+    rows.push([t('pr.e1rm'), `${nf1.format(prs.e1rm.value)} kg`, prs.e1rm.date]);
   }
   if (prs.reps) {
-    rows.push(['Meiste Wdh. in einem Satz', nf0.format(prs.reps.value), prs.reps.date]);
+    rows.push([t('pr.reps'), nf0.format(prs.reps.value), prs.reps.date]);
   }
   if (prs.volume) {
-    rows.push(['Bestes Session-Volumen', `${nf0.format(prs.volume.value)} kg`, prs.volume.date]);
+    rows.push([t('pr.volume'), `${nf0.format(prs.volume.value)} kg`, prs.volume.date]);
   }
   if (prs.duration) {
-    rows.push(['Längste Dauer', formatDuration(prs.duration.value), prs.duration.date]);
+    rows.push([t('pr.duration'), formatDuration(prs.duration.value), prs.duration.date]);
   }
   if (prs.distance) {
-    rows.push(['Größte Distanz', `${nf2.format(prs.distance.value)} km`, prs.distance.date]);
+    rows.push([t('pr.distance'), `${nf2.format(prs.distance.value)} km`, prs.distance.date]);
   }
   return rows;
 }
@@ -521,36 +529,35 @@ function renderExercises() {
   select.value = state.exerciseKey;
 
   const h = exerciseHistory(state.data, state.exerciseKey, state.settings);
-  $('exercise-meta').textContent = `${h.info.group} · ${nf0.format(h.sessions.length)} Sessions`;
+  $('exercise-meta').textContent = t('ex.meta', groupLabel(h.info.group), nf0.format(h.sessions.length));
 
   const hints = [];
   if (h.metric === 'e1rm') {
-    hints.push(`e1RM (Epley) nur aus Sätzen mit ≤ 12 Wdh.${h.repCapHit ? ' Sätze mit mehr Wdh. fließen nicht ein.' : ''}`);
+    hints.push(`${t('ex.hintE1rm')}${h.repCapHit ? t('ex.hintRepCap') : ''}`);
   }
   if (h.assistOnly) {
-    hints.push('Unterstützte Übung ohne Körpergewicht: Es zählt die geringste Unterstützung (weniger ist besser), ohne e1RM '
-      + 'und Volumen. Mit Körpergewicht unter „Muskelaufbau“ wird die effektive Last berechnet.');
+    hints.push(t('ex.hintAssistOnly'));
   } else if (h.info.assisted) {
-    hints.push('Unterstützte Übung: effektive Last = Körpergewicht − Unterstützung.');
+    hints.push(t('ex.hintAssisted'));
   }
-  $('exercise-hints').replaceChildren(...hints.map((t) => el('li', '', t)));
+  $('exercise-hints').replaceChildren(...hints.map((text) => el('li', '', text)));
 
   const imp = h.improvement;
-  const metricName = h.info.assisted ? METRIC_NAMES.assist : METRIC_NAMES[h.metric];
-  $('exercise-improvement').textContent = !imp ? 'zu wenig Daten' : imp.percent === null ? '–' : `${nfSigned.format(imp.percent)} %`;
+  const metricName = h.info.assisted ? t('metricName.assist') : t(`metricName.${h.metric}`);
+  $('exercise-improvement').textContent = !imp ? t('ex.tooLittle') : imp.percent === null ? '–' : t('pct', nfSigned.format(imp.percent));
   $('exercise-improvement-sub').textContent = imp
-    ? `${metricName}, ${imp.method === 'avg3' ? 'Ø erste 3 vs. letzte 3 Sessions' : 'erste vs. letzte Session'}`
+    ? `${metricName}, ${imp.method === 'avg3' ? t('ex.avg3') : t('ex.firstLast')}`
     : metricName;
 
-  $('ex-main-title').textContent = METRIC_TITLES[h.metric];
+  $('ex-main-title').textContent = t(`metricTitle.${h.metric}`);
   const mainPoints = h.metric === 'duration' ? h.series.map((p) => ({ x: p.x, y: Math.round((p.y / 60) * 10) / 10 })) : h.series;
-  renderChart('chart-ex-main', timeLineConfig(mainPoints, METRIC_TITLES[h.metric]));
+  renderChart('chart-ex-main', timeLineConfig(mainPoints, t(`metricTitle.${h.metric}`)));
 
   const topPoints = h.sessions.filter((s) => s.topLoad !== null).map((s) => ({ x: s.date, y: s.topLoad }));
   const showTop = h.metric === 'e1rm' && topPoints.length > 0;
   $('ex-top-card').hidden = !showTop;
   if (showTop) {
-    renderChart('chart-ex-top', timeLineConfig(topPoints, 'Top-Satz-Gewicht (kg)'));
+    renderChart('chart-ex-top', timeLineConfig(topPoints, t('ex.topTitle')));
   } else {
     destroyChart('chart-ex-top');
   }
@@ -558,7 +565,7 @@ function renderExercises() {
   const volumePoints = h.sessions.filter((s) => s.volumeKg > 0).map((s) => ({ x: s.date, y: Math.round(s.volumeKg) }));
   $('ex-volume-card').hidden = volumePoints.length === 0;
   if (volumePoints.length) {
-    renderChart('chart-ex-volume', timeLineConfig(volumePoints, 'Volumen (kg)'));
+    renderChart('chart-ex-volume', timeLineConfig(volumePoints, t('chart.volume')));
   } else {
     destroyChart('chart-ex-volume');
   }
@@ -566,7 +573,7 @@ function renderExercises() {
   const rows = recordRows(h);
   $('pr-body').replaceChildren(...(rows.length
     ? rows.map(([label, value, date]) => tableRow([label, value, formatDate(date)]))
-    : [tableRow(['Keine Rekorde', '–', '–'])]));
+    : [tableRow([t('pr.none'), '–', '–'])]));
 }
 
 /**
@@ -576,9 +583,9 @@ function renderExercises() {
 function renderMuscles() {
   const mv = muscleVolume(state.data);
   $('muscle-body').replaceChildren(...mv.groups.map((g) => {
-    const name = el('td', '', g.group);
+    const name = el('td', '', groupLabel(g.group));
     if (g.underTrained) {
-      name.append(el('span', 'badge', 'unter 10'));
+      name.append(el('span', 'badge', t('muscles.under')));
     }
     return tableRow([name, nf1.format(g.recentAvg), nf1.format(g.totalAvg)], true);
   }));
@@ -587,13 +594,14 @@ function renderMuscles() {
   renderChart('chart-muscle-share', {
     type: 'doughnut',
     data: {
-      labels: used.map((g) => g.group),
+      labels: used.map((g) => groupLabel(g.group)),
       datasets: [{ data: used.map((g) => g.sets), backgroundColor: used.map((g) => groupColor(g.group)), borderColor: cssVar('--surface') }],
     },
     options: {
       plugins: {
         legend: { position: 'bottom', labels: { boxWidth: 12 } },
-        tooltip: { callbacks: { label: (item) => `${item.label}: ${nf0.format(item.raw)} Sätze (${nf1.format(used[item.dataIndex].share * 100)} %)` } },
+        tooltip: { callbacks: { label: (item) => t('muscles.tooltip', item.label, nf0.format(item.raw),
+          t('pct', nf1.format(used[item.dataIndex].share * 100))) } },
       },
     },
   });
@@ -604,7 +612,7 @@ function renderMuscles() {
     data: {
       labels: mv.weeks.map((w) => w.label),
       datasets: weekGroups.map((group) => ({
-        label: group, data: mv.weeks.map((w) => w.counts[group]), backgroundColor: groupColor(group),
+        label: groupLabel(group), data: mv.weeks.map((w) => w.counts[group]), backgroundColor: groupColor(group),
       })),
     },
     options: {
@@ -638,23 +646,23 @@ function fillSettingsForm() {
 function renderGain() {
   fillSettingsForm();
   const g = muscleGainEstimate(state.data, state.settings);
-  $('gain-result').textContent = `ca. ${nf1.format(g.low)}–${nf1.format(g.high)} kg Muskelmasse (Schätzung)`;
+  $('gain-result').textContent = t('gain.result', nf1.format(g.low), nf1.format(g.high));
   fillDefinitions($('gain-details'), [
-    ['Zeitraum', `${nf1.format(g.monthsCovered)} Monate`],
-    ['Vorerfahrung', `${nf0.format(g.pretrainingMonths)} Monate`],
-    ['Trainingsalter am Ende', `${nf0.format(g.trainingAgeEnd)} Monate`],
-    ['Ø Konsistenz', `${nf0.format(g.avgConsistency * 100)} % von 3 Workouts/Woche`],
-    ['Kraftfaktor', nf2.format(g.p)],
-    ['Median e1RM-Verbesserung', g.strengthFallback
-      ? 'keine Übung mit ≥ 6 e1RM-Sessions, Kraftfaktor 0,75 angenommen'
-      : `${nfSigned.format(g.medianPct)} % (${nf0.format(g.strengthExercises)} Übungen)`],
-    ['Modell', g.model === 'mcdonald' ? 'McDonald (ohne Körpergewicht)' : 'McDonald + Aragon'],
-    ['Faktor Geschlecht', nf1.format(g.sexFactor)],
+    [t('gain.dPeriod'), t('gain.months', nf1.format(g.monthsCovered))],
+    [t('gain.dPretraining'), t('gain.months', nf0.format(g.pretrainingMonths))],
+    [t('gain.dAgeEnd'), t('gain.months', nf0.format(g.trainingAgeEnd))],
+    [t('gain.dConsistency'), t('gain.consistencyValue', t('pct', nf0.format(g.avgConsistency * 100)))],
+    [t('gain.dStrength'), nf2.format(g.p)],
+    [t('gain.dMedian'), g.strengthFallback
+      ? t('gain.fallback')
+      : t('gain.medianValue', t('pct', nfSigned.format(g.medianPct)), nf0.format(g.strengthExercises))],
+    [t('gain.dModel'), g.model === 'mcdonald' ? t('gain.modelMcDonald') : t('gain.modelBoth')],
+    [t('gain.dSex'), nf1.format(g.sexFactor)],
   ]);
   $('gain-months').replaceChildren(...g.months.map((m) => tableRow([
     m.label,
     nf2.format(m.fraction),
-    `${nf0.format(m.trainingAge)} Mon.`,
+    t('gain.monthShort', nf0.format(m.trainingAge)),
     `${nf2.format(m.potLow)}–${nf2.format(m.potHigh)}`,
     nf2.format(m.consistency),
     `${nf2.format(m.gainLow)}–${nf2.format(m.gainHigh)}`,
@@ -668,30 +676,30 @@ function renderGain() {
 function renderFacts() {
   const f = funFacts(state.data, state.settings);
   const cards = [
-    kpiCard('Gesamtvolumen', `${nf1.format(f.totalVolumeKg / 1000)} t`, 'Last × Wdh. aller Arbeitssätze',
+    kpiCard(t('facts.totalVolume'), `${nf1.format(f.totalVolumeKg / 1000)} t`, t('facts.totalVolumeSub'),
       { to: f.totalVolumeKg / 1000, format: (n) => `${nf1.format(n)} t` }),
-    kpiCard('Gewichtheben in Elefanten', nf1.format(f.elephants), 'Afrikanische Elefanten à 6 t',
+    kpiCard(t('facts.elephants'), nf1.format(f.elephants), t('facts.elephantsSub'),
       { to: f.elephants, format: (n) => nf1.format(n) }),
-    kpiCard('In Kleinwagen', nf0.format(f.cars), 'Kleinwagen à 1,3 t', { to: f.cars, format: (n) => nf0.format(n) }),
-    kpiCard('In Blauwalen', nf1.format(f.blueWhales), 'Blauwale à 150 t', { to: f.blueWhales, format: (n) => nf1.format(n) }),
-    kpiCard('Wiederholungen gesamt', nf0.format(f.totalReps), undefined, { to: f.totalReps, format: (n) => nf0.format(n) }),
+    kpiCard(t('facts.cars'), nf0.format(f.cars), t('facts.carsSub'), { to: f.cars, format: (n) => nf0.format(n) }),
+    kpiCard(t('facts.whales'), nf1.format(f.blueWhales), t('facts.whalesSub'), { to: f.blueWhales, format: (n) => nf1.format(n) }),
+    kpiCard(t('facts.reps'), nf0.format(f.totalReps), undefined, { to: f.totalReps, format: (n) => nf0.format(n) }),
   ];
   if (f.biggestSession) {
-    cards.push(kpiCard('Größte Session', `${nf0.format(f.biggestSession.volumeKg)} kg`,
+    cards.push(kpiCard(t('facts.biggest'), `${nf0.format(f.biggestSession.volumeKg)} kg`,
       `${f.biggestSession.title}, ${formatDate(f.biggestSession.date)}`,
       { to: f.biggestSession.volumeKg, format: (n) => `${nf0.format(n)} kg` }));
   }
   if (f.heaviestLift) {
-    cards.push(kpiCard('Schwerste Einzellast', `${nf1.format(f.heaviestLift.loadKg)} kg`,
+    cards.push(kpiCard(t('facts.heaviest'), `${nf1.format(f.heaviestLift.loadKg)} kg`,
       `${f.heaviestLift.exercise}, ${formatDate(f.heaviestLift.date)}`,
       { to: f.heaviestLift.loadKg, format: (n) => `${nf1.format(n)} kg` }));
   }
   if (f.strongestMonth) {
-    cards.push(kpiCard('Stärkster Monat', f.strongestMonth.start.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
-      `${nf1.format(f.strongestMonth.volumeKg / 1000)} t Volumen`));
+    cards.push(kpiCard(t('facts.strongestMonth'), f.strongestMonth.start.toLocaleDateString(locale(), { month: 'long', year: 'numeric' }),
+      t('facts.monthVolume', nf1.format(f.strongestMonth.volumeKg / 1000))));
   }
   $('facts').replaceChildren(...cards);
-  renderChart('chart-prs', barConfig(f.prsPerMonth.map((m) => m.label), f.prsPerMonth.map((m) => m.count), 'Rekorde'));
+  renderChart('chart-prs', barConfig(f.prsPerMonth.map((m) => m.label), f.prsPerMonth.map((m) => m.count), t('chart.records')));
 }
 
 /**
@@ -735,7 +743,7 @@ function importText(text, fileName) {
     return;
   }
   if (!data.workouts.length) {
-    showError('Die Datei enthält keine Workouts.');
+    showError(t('error.noWorkouts'));
     return;
   }
   showError(null);
@@ -765,7 +773,7 @@ async function handleFile(file) {
   try {
     text = await file.text();
   } catch {
-    showError(`Datei "${file.name}" konnte nicht gelesen werden.`);
+    showError(t('error.read', file.name));
     return;
   }
   importText(text, file.name);
@@ -786,19 +794,23 @@ function restore() {
     state.meta = loadJson(STORAGE.meta);
   } catch (e) {
     state.data = null;
-    showError(`Gespeicherte Daten konnten nicht gelesen werden: ${e.message}`);
+    showError(t('error.restore', e.message));
   }
 }
 
 /**
- * Deletes all local data after confirmation and resets the page.
+ * Deletes all local data except the chosen language after confirmation and resets the page.
  * @returns {void}
  */
 function clearData() {
-  if (!confirm('Alle importierten Daten und Einstellungen von diesem Gerät löschen?')) {
+  if (!confirm(t('confirm.clear'))) {
     return;
   }
+  const lang = loadItem(STORAGE.lang);
   removeAllItems();
+  if (lang) {
+    saveItem(STORAGE.lang, lang);
+  }
   state.data = null;
   state.meta = null;
   state.settings = { ...DEFAULT_SETTINGS };
@@ -821,6 +833,41 @@ function updateSettings() {
     experience: EXPERIENCES.includes($('experience').value) ? $('experience').value : DEFAULT_SETTINGS.experience,
   };
   saveItem(STORAGE.settings, JSON.stringify(state.settings));
+  renderAll();
+}
+
+/**
+ * Sets the language, the number formats and all static texts and attributes marked with data-i18n.
+ * Does not store the choice and does not re-render the dynamic parts.
+ * @param {string} lang Language code.
+ * @returns {void}
+ */
+function applyLanguage(lang) {
+  setLanguage(lang);
+  document.documentElement.lang = language();
+  createNumberFormats();
+  document.querySelectorAll('[data-i18n]').forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+  I18N_ATTRIBUTES.forEach((attr) => document.querySelectorAll(`[data-i18n-${attr}]`)
+    .forEach((node) => node.setAttribute(attr, t(node.getAttribute(`data-i18n-${attr}`)))));
+  document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === language())));
+  if (!$('storage-warning').hidden) {
+    showStorageWarning(true);
+  }
+}
+
+/**
+ * Switches to another language, stores the choice and re-renders the page from the already parsed data.
+ * @param {string} lang Language code.
+ * @returns {void}
+ */
+function switchLanguage(lang) {
+  if (lang === language()) {
+    return;
+  }
+  applyLanguage(lang);
+  saveItem(STORAGE.lang, language());
   renderAll();
 }
 
@@ -878,6 +925,7 @@ function bindEvents() {
   });
   $('gain-form').addEventListener('change', updateSettings);
   $('gain-form').addEventListener('submit', (e) => e.preventDefault());
+  document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => switchLanguage(b.dataset.lang)));
 
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (state.data) {
@@ -905,6 +953,8 @@ async function registerServiceWorker() {
 function init() {
   $('start-error').hidden = true;
   initEffects();
+  const storedLang = loadItem(STORAGE.lang);
+  applyLanguage(LANGUAGES.includes(storedLang) ? storedLang : DEFAULT_LANGUAGE);
   state.settings = loadSettings();
   bindEvents();
   restore();

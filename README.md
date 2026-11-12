@@ -18,9 +18,14 @@ The muscle gain figure is an estimate based on published training models, not a 
 
 1. In Hevy: Profile → Settings → Export data → Export workouts (CSV).
 2. Open the app in Chrome on Android and choose "Install app" or "Add to Home screen" from the menu.
-3. Tap "CSV auswählen" and pick the exported file. On desktop you can also drag the file into the window.
+3. Tap "Choose CSV" ("CSV auswählen" in the German interface) and pick the exported file. On desktop you can also
+   drag the file into the window.
 
-The data stays stored on the device until you remove it with "Daten löschen". Import a fresh export to update it.
+The data stays stored on the device until you remove it with "Delete data" ("Daten löschen"). Import a fresh export to
+update it.
+
+The interface is German by default; switch to English with the DE/EN button in the header. The choice is remembered on
+the device.
 
 ## Privacy
 

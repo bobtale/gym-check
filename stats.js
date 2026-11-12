@@ -2,10 +2,12 @@
  * Computes key figures, time series, exercise histories, muscle group volume, fun facts,
  * a muscle gain estimate and heatmap data from parsed Hevy data.
  * Pure module without DOM access; `settings` and `now` are always passed in.
+ * Labels (weekdays, times of day, week and month labels) follow the current language of i18n.js.
  * @module stats
  */
 
 import { MUSCLE_GROUPS } from './muscles.js';
+import { t } from './i18n.js';
 
 /** Constants of the muscle gain model (McDonald and Aragon, see muscleGainEstimate). */
 export const GAIN_MODEL = {
@@ -32,8 +34,6 @@ export const COMPARISONS = { car: 1300, elephant: 6000, blueWhale: 150000 };
 /** Recommended minimum of weekly work sets per muscle group (Schoenfeld et al. 2017). */
 export const MIN_WEEKLY_SETS = 10;
 
-const WEEKDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
-const MONTH_LABELS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const UNMARKED_GROUPS = ['Cardio', 'Sonstiges'];
 const DAY_MS = 86400000;
 
@@ -67,12 +67,12 @@ export function monthKey(date) {
 }
 
 /**
- * Builds a short German month label such as "Jan 26".
+ * Builds a short month label such as "Jan 26"; the label follows the current language of i18n.js.
  * @param {Date} date Any date in the month.
  * @returns {string} Month label.
  */
 export function monthLabel(date) {
-  return `${MONTH_LABELS[date.getMonth()]} ${String(date.getFullYear()).slice(-2)}`;
+  return `${t('monthsShort')[date.getMonth()]} ${String(date.getFullYear()).slice(-2)}`;
 }
 
 /**
@@ -113,7 +113,8 @@ export function weekKey(date) {
 }
 
 /**
- * Builds a label "KW 12/26" from the ISO week number and ISO week year.
+ * Builds a label such as "KW 12/26" from the ISO week number and ISO week year; the label follows the current
+ * language of i18n.js.
  * @param {Date} monday Monday of the week.
  * @returns {string} Week label.
  */
@@ -121,7 +122,7 @@ export function weekLabel(monday) {
   const thursday = addDays(monday, 3);
   const firstThursday = addDays(weekStart(new Date(thursday.getFullYear(), 0, 4)), 3);
   const week = 1 + Math.round((thursday - firstThursday) / (7 * DAY_MS));
-  return `KW ${week}/${String(thursday.getFullYear()).slice(-2)}`;
+  return t('weekLabel', week, String(thursday.getFullYear()).slice(-2));
 }
 
 /**
@@ -287,24 +288,25 @@ function streakBackwards(activeWeeks, from) {
 }
 
 /**
- * Maps a start hour to a German time of day.
+ * Maps a start hour to a time of day; the label follows the current language of i18n.js.
  * @param {number} hour Hour 0-23.
  * @returns {string} Time of day.
  */
 function dayTime(hour) {
+  const [morning, midday, afternoon, evening, night] = t('dayTimes');
   if (hour >= 5 && hour <= 10) {
-    return 'Morgens';
+    return morning;
   }
   if (hour >= 11 && hour <= 13) {
-    return 'Mittags';
+    return midday;
   }
   if (hour >= 14 && hour <= 16) {
-    return 'Nachmittags';
+    return afternoon;
   }
   if (hour >= 17 && hour <= 21) {
-    return 'Abends';
+    return evening;
   }
-  return 'Nachts';
+  return night;
 }
 
 /**
@@ -344,11 +346,12 @@ export function overview(data, settings, now = new Date()) {
   let volumeKg = 0;
   const exWorkouts = new Map();
   const exSets = new Map();
-  const weekdayCounts = new Map(WEEKDAYS.map((d) => [d, 0]));
-  const dayTimeCounts = new Map(['Morgens', 'Mittags', 'Nachmittags', 'Abends', 'Nachts'].map((d) => [d, 0]));
+  const weekdays = t('weekdays');
+  const weekdayCounts = new Map(weekdays.map((d) => [d, 0]));
+  const dayTimeCounts = new Map(t('dayTimes').map((d) => [d, 0]));
   let assistedWithoutWeight = false;
   for (const w of workouts) {
-    const weekday = WEEKDAYS[(w.start.getDay() + 6) % 7];
+    const weekday = weekdays[(w.start.getDay() + 6) % 7];
     weekdayCounts.set(weekday, weekdayCounts.get(weekday) + 1);
     const time = dayTime(w.start.getHours());
     dayTimeCounts.set(time, dayTimeCounts.get(time) + 1);
