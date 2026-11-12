@@ -1,12 +1,12 @@
 /**
- * Service worker of Gym Check: precaches the app shell and Chart.js for offline use.
+ * Service worker of Gym Check: precaches the app shell and the vendored Chart.js for offline use.
  * Chart.js (pinned version) is served cache-first, own files network-first with cache fallback.
  */
 
 const CACHE_PREFIX = 'gym-check-';
-const CACHE = `${CACHE_PREFIX}v2`;
+const CACHE = `${CACHE_PREFIX}v3`;
 const NETWORK_TIMEOUT_MS = 3000;
-const CHART_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js';
+const CHART_URL = new URL('vendor/chart.umd.min.js', self.location).href;
 const LOCAL_FILES = [
   './',
   'index.html',
@@ -28,7 +28,7 @@ const LOCAL_FILES = [
  */
 async function precache() {
   const cache = await caches.open(CACHE);
-  await cache.addAll([...LOCAL_FILES, new Request(CHART_URL, { mode: 'cors' })]);
+  await cache.addAll([...LOCAL_FILES, CHART_URL]);
 }
 
 /**

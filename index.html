@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net; manifest-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)">
@@ -13,9 +13,8 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"
-          integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
-          crossorigin="anonymous"></script>
+  <script src="vendor/chart.umd.min.js"
+          integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
@@ -225,6 +224,7 @@
   <footer class="site-footer">
     <p>Gym Check · keine Übertragung, kein Server, kein Tracking</p>
     <p>Kein offizielles Produkt von Hevy, nicht mit Hevy verbunden.</p>
+    <p>Datenschutz: Die App speichert deine Daten nur in diesem Browser und überträgt nichts. Die Seite wird von GitHub Pages ausgeliefert; dabei verarbeitet GitHub technisch nötige Zugriffsdaten wie die IP-Adresse, siehe <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">Datenschutzerklärung von GitHub</a>.</p>
   </footer>
 </body>
 </html>

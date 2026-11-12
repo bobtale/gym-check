@@ -24,12 +24,15 @@ The data stays stored on the device until you remove it with "Daten löschen". I
 
 ## Privacy
 
-Your data never leaves your device: no server, no upload, no tracking. The only external resource is Chart.js, loaded
-from jsDelivr without any of your data.
+Your data never leaves your device: no server, no upload, no tracking, no third-party requests. All files, including
+Chart.js, are served from GitHub Pages, which processes technically necessary access data such as IP addresses (see the
+[GitHub General Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)).
 
 ## License
 
 [MIT](LICENSE)
+
+`vendor/chart.umd.min.js` is [Chart.js](https://www.chartjs.org) 4.5.1, © Chart.js Contributors, MIT License.
 
 The visual effects in `effects.js` and the related rules in `style.css` are vanilla ports of components from
 [React Bits](https://reactbits.dev) (PillNav, CountUp, SpotlightCard, GradientText, AnimatedContent, StarBorder)
