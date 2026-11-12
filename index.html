@@ -20,16 +20,19 @@
 </head>
 <body>
   <header class="site-header">
-    <h1>Gym Check</h1>
-    <nav aria-label="Abschnitte">
-      <a href="#import">Import</a>
-      <a href="#ueberblick" class="needs-data" hidden>Überblick</a>
-      <a href="#verlauf" class="needs-data" hidden>Verlauf</a>
-      <a href="#uebungen" class="needs-data" hidden>Übungen</a>
-      <a href="#muskelgruppen" class="needs-data" hidden>Muskelgruppen</a>
-      <a href="#muskelaufbau" class="needs-data" hidden>Muskelaufbau</a>
-      <a href="#fakten" class="needs-data" hidden>Fakten</a>
-    </nav>
+    <div class="header-bar">
+      <h1 class="brand"><img src="icon.svg" alt="" width="28" height="28"><span class="gradient-text">Gym Check</span></h1>
+      <nav class="pill-nav" aria-label="Abschnitte">
+        <span class="pill-indicator" aria-hidden="true"></span>
+        <a href="#import">Import</a>
+        <a href="#ueberblick" class="needs-data" hidden>Überblick</a>
+        <a href="#verlauf" class="needs-data" hidden>Verlauf</a>
+        <a href="#uebungen" class="needs-data" hidden>Übungen</a>
+        <a href="#muskelgruppen" class="needs-data" hidden>Muskelgruppen</a>
+        <a href="#muskelaufbau" class="needs-data" hidden>Muskelaufbau</a>
+        <a href="#fakten" class="needs-data" hidden>Fakten</a>
+      </nav>
+    </div>
   </header>
 
   <main>
@@ -38,7 +41,7 @@
       <p class="hint">Deine Daten bleiben auf diesem Gerät.</p>
       <div id="import-picker">
         <input id="file-input" type="file" accept=".csv,text/csv,text/comma-separated-values,text/plain">
-        <label class="file-button" for="file-input">CSV auswählen</label>
+        <label class="file-button star-border" for="file-input">CSV auswählen</label>
         <div id="drop-zone" class="drop-zone">oder die CSV-Datei hierher ziehen</div>
         <p class="hint">Export in Hevy sinngemäß: Profil → Einstellungen → Daten exportieren → Workouts exportieren (CSV).</p>
       </div>
@@ -70,7 +73,7 @@
 
     <section id="verlauf" class="needs-data" hidden>
       <h2>Verlauf</h2>
-      <div class="card">
+      <div class="card wide">
         <div class="card-head">
           <h3>Workouts</h3>
           <div class="toggle" role="group" aria-label="Zeitraum">
@@ -88,7 +91,7 @@
         <h3>Ø Dauer je Woche (min)</h3>
         <div class="chart-box"><canvas id="chart-duration"></canvas></div>
       </div>
-      <div class="card">
+      <div class="card wide">
         <h3>Trainingstage (letzte 53 Wochen)</h3>
         <div id="heatmap" class="heatmap" role="img" aria-label="Heatmap der Trainingstage"></div>
         <div class="heatmap-legend" aria-hidden="true">
@@ -101,7 +104,7 @@
 
     <section id="uebungen" class="needs-data" hidden>
       <h2>Übungen</h2>
-      <div class="card">
+      <div class="card wide">
         <label for="exercise-select">Übung (Anzahl Sessions)</label>
         <select id="exercise-select"></select>
         <p id="exercise-meta" class="hint"></p>
@@ -146,11 +149,11 @@
         <h3>Verteilung (gesamter Zeitraum)</h3>
         <div class="chart-box chart-box-tall"><canvas id="chart-muscle-share"></canvas></div>
       </div>
-      <div class="card">
+      <div class="card wide">
         <h3>Sätze je Woche (letzte 12 Wochen)</h3>
         <div class="chart-box chart-box-tall"><canvas id="chart-muscle-weeks"></canvas></div>
       </div>
-      <div class="card" id="other-card">
+      <div class="card wide" id="other-card">
         <h3>Übungen unter „Sonstiges“</h3>
         <ul id="other-exercises"></ul>
       </div>
@@ -212,7 +215,7 @@
     <section id="fakten" class="needs-data" hidden>
       <h2>Fakten</h2>
       <div id="facts" class="kpi-grid"></div>
-      <div class="card">
+      <div class="card wide">
         <h3>Persönliche Rekorde je Monat (e1RM)</h3>
         <div class="chart-box"><canvas id="chart-prs"></canvas></div>
       </div>
@@ -221,6 +224,7 @@
 
   <footer class="site-footer">
     <p>Gym Check · keine Übertragung, kein Server, kein Tracking</p>
+    <p>Kein offizielles Produkt von Hevy, nicht mit Hevy verbunden.</p>
   </footer>
 </body>
 </html>
